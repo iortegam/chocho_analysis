@@ -176,36 +176,31 @@ def main(argv):
     #---------------------------------
     #Plot plttsdoi: Time series of specific dates of interest
     #---------------------------------
-    if pltInputs['plttsdoi']:
+    if pltInputs['plttsdoih']:
         gas.plttsdoi(pltInputs['easplt'], fltr=pltInputs['fltrFlg'], maxrms= pltInputs['maxRMS'] , minsza=pltInputs['minSZA'],
                 maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
                 szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
-                dois= pltInputs['doi_cs'], dtrange=True, title='Clear days', ver2plt=pltInputs['versions'][0])
+                dois= pltInputs['doi_cs'], dtrange=True, title='Clear sky', ver2plt=pltInputs['versions'][0])
 
     #---------------------------------
     #Plot plttsdoih: Time series of specific dates of interest (Hourly averages)
     #---------------------------------
     if pltInputs['plttsdoih']:
-         gas.plttsdoih(pltInputs['easplt'], fltr=pltInputs['fltrFlg'], maxrms= pltInputs['maxRMS'] , minsza=pltInputs['minSZA'],
-                 maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
-                 szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
-                 dois= pltInputs['doi_cs'], dtrange=True, title='Clear days', ver2plt=pltInputs['versions'][0], group4mean=pltInputs['group4mean'] )
-
-    #     gas.plttsdoih(pltInputs['easplt'], fltr=pltInputs['fltrFlg'], maxrms= pltInputs['maxRMS'] , minsza=pltInputs['minSZA'],
-    #             maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
-    #             szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
-    #             dois= pltInputs['doi_os'], dtrange=True, title='Overcast', ver2plt=pltInputs['versions'][0], group4mean=pltInputs['group4mean'] )
-
-    #     gas.plttsdoih(pltInputs['easplt'], fltr=pltInputs['fltrFlg'], maxrms= pltInputs['maxRMS'] , minsza=pltInputs['minSZA'],
-    #             maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
-    #             szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
-    #             dois= pltInputs['doi_bs'], dtrange=True, title='Broken clouds', ver2plt=pltInputs['versions'][0], group4mean=pltInputs['group4mean'] )
-
-    if pltInputs['plttsdoih']:
         gas.plttsdoihcorr(pltInputs['easplt'], fltr=pltInputs['fltrFlg'], maxrms= pltInputs['maxRMS'] , minsza=pltInputs['minSZA'],
-                maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
-                szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
-                dois= pltInputs['doi_cs'], dtrange=True, title='Clear days', ver2plt=pltInputs['versions'][0], group4mean=pltInputs['group4mean'] )
+        maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
+        szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
+        dois= pltInputs['doi_cs'], dtrange=True, title='Clear sky', ver2plt=pltInputs['versions'][0], group4mean=pltInputs['group4mean'] )
+
+        gas.plttsdoihcorr(pltInputs['easplt'], fltr=pltInputs['fltrFlg'], maxrms= pltInputs['maxRMS'] , minsza=pltInputs['minSZA'],
+        maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
+        szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
+        dois= pltInputs['doi_os'], dtrange=True, title='Overcast', ver2plt=pltInputs['versions'][0], group4mean=pltInputs['group4mean'] )
+
+        gas.plttsdoihcorr(pltInputs['easplt'], fltr=pltInputs['fltrFlg'], maxrms= pltInputs['maxRMS'] , minsza=pltInputs['minSZA'],
+        maxsza=pltInputs['maxSZA'], maxOff=pltInputs['maxOff'], vaplt=pltInputs['vaplt'], rmsFlg=pltInputs['rmsFlg'], 
+        szaFlg=pltInputs['szaFlg'], ofFlg=pltInputs['ofFlg'], LDFlg=pltInputs['LDFlg'], VAFlg=pltInputs['VAFlg'],
+        dois= pltInputs['doi_bs'], dtrange=True, title='Broken clouds', ver2plt=pltInputs['versions'][0], group4mean=pltInputs['group4mean'] )
+
 
     #---------------------------------
     #Plot pltraw: 
