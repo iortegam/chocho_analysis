@@ -11,13 +11,14 @@ import datetime as dt
 #----------------------
 # Importan Inputs
 #----------------------
-groups     = ['BIR', 'BRE', 'BOU', 'HEI', 'MAI', 'MOH', 'IAP']                    #Group ID identifier
-vaplt      = [50.0, 51.0, 50.8, 50.8, 51.0, 50.8, 51.0]                          #standard viewing angle (defined by each group)
+#groups     = ['BIR', 'BRE', 'BOU', 'HEI', 'MAI', 'MOH']#, 'IAP']                    #Group ID identifier
+groups     = ['BOU']
+vaplt      = [50.0, 51.0, 50.8, 50.8, 51.0, 50.8]#, 51.0]                          #standard viewing angle (defined by each group)
 
 #----------------------
 # Importan Inputs for plots
 #----------------------
-versions   =  ['V2']#, 'V1', 'V3']#, 'V4']                                     #Name of retrieval version to process (v1,v2,v3, or v4)
+versions   =  ['V2']#, 'V1', 'V3', 'V4']                                     #Name of retrieval version to process (v1,v2,v3, or v4)
 easplt      = [1,2,3,5,10]                                                  #EAs for plots
 eaplt       = 3                                                           #SIngle EA
 group4mean  = ['BRE', 'BOU']
@@ -27,11 +28,11 @@ group4mean  = ['BRE', 'BOU']
 #Choose pls to display
 #----------------------
 
+pltdoiEx      = True     #CORRELATION PLOT OF DIFFERENT SETTINGS FOR THE SAME GROUP
 pltvcorr      = False     #CORRELATION PLOT OF DIFFERENT SETTINGS FOR THE SAME GROUP
-pltsig        = False     #BAR PLOT SHOWING % OF DATA BELOW DL AND ABOVE MAX RMS IF FLAGS ARE TRUE
+pltsig        = False    #BAR PLOT SHOWING % OF DATA BELOW DL AND ABOVE MAX RMS IF FLAGS ARE TRUE
 pltts         = False     #PLOT COMPLETE TIME SERIES USING THE FIRST VERSION
-plttsdoi      = False     #PLOT TIME SERIES FOR DAYS OF INTEREST
-plttsdoih     = True     #PLOT TIME SERIES FOR DAYS OF INTEREST (HOURLY MEAN)
+plttsdoih     = False     #PLOT TIME SERIES FOR DAYS OF INTEREST (HOURLY MEAN)
 pltraw        = False      #PLOT RAW DATA USING the single eaplt input; DATES AND WHAT TO PLOT IS HARDCODED
 
 #----------------------
@@ -70,5 +71,5 @@ dataDir = '/home/ivan/chocho/data/'
 #----------------------
 # PDF: Figure name
 #----------------------
-pltFile  = '/home/ivan/chocho/fig/test.pdf'
+pltFile  = '/home/ivan/chocho/fig/plttest.pdf'
        

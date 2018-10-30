@@ -314,6 +314,85 @@ def groupAvg(data, dates, dateAxis=1, meanAxis=0, quad=0):
 
     return dataAvg, std, dh, cnt
 
+def readDataCU(fileName, group, version):
+
+    print 'reading data: %s' %fileName
+
+   #-----------------------------------------------------------
+    #Declare self
+    #-----------------------------------------------------------
+    DataCl = { }
+    
+    ckFile(fileName, exitFlg=True)
+
+    #------------------------
+    # Open file and read data
+    #------------------------
+    with open(fileName,'r') as fname:
+        try:
+            data = fname.readlines()
+        except:
+            print 'Error in reading file: %s' % fileName
+            sys.exit()   
+    
+    #--------------------
+    # Remove white spaces
+    #--------------------
+    if group == 'BRE': data[:] = [ row.strip().split(',') for row in data[41:] ]
+    else:  data[:] = [ row.strip().split(',') for row in data[40:] ]
+
+
+    #---------------------------------
+    # Determine number of observations
+    #---------------------------------
+    npoints =  len(data)
+    #------------------
+    # Update dictionary
+    #------------------
+    
+    DataCl.setdefault('doy',[]).append( [float(row[0].split()[0]) for row in data] )
+    DataCl.setdefault('tod',[]).append( [float(row[0].split()[1]) for row in data])
+    DataCl.setdefault('itime',[]).append([float(row[0].split()[2]) for row in data])
+    DataCl.setdefault('sza',[]).append([float(row[0].split()[3]) for row in data])
+    DataCl.setdefault('saa',[]).append([float(row[0].split()[4]) for row in data])
+    DataCl.setdefault('ea',[]).append([float(row[0].split()[5]) for row in data])
+    DataCl.setdefault('va',[]).append([float(row[0].split()[6]) for row in data])
+    DataCl.setdefault('chocho',[]).append([float(row[0].split()[7]) for row in data])
+    DataCl.setdefault('chocho_e',[]).append([float(row[0].split()[8]) for row in data])
+    DataCl.setdefault('no2',[]).append([float(row[0].split()[9]) for row in data])
+    DataCl.setdefault('no2_e',[]).append([float(row[0].split()[10]) for row in data])
+    DataCl.setdefault('o4',[]).append([float(row[0].split()[11]) for row in data])
+    DataCl.setdefault('o4_e',[]).append([float(row[0].split()[12]) for row in data])
+    DataCl.setdefault('ri',[]).append([float(row[0].split()[13]) for row in data])
+    DataCl.setdefault('ci',[]).append([float(row[0].split()[14]) for row in data])
+    DataCl.setdefault('rms',[]).append([float(row[0].split()[15]) for row in data])
+    DataCl.setdefault('no2_cold',[]).append([float(row[0].split()[16]) for row in data])
+    DataCl.setdefault('no2_cold_e',[]).append([float(row[0].split()[17]) for row in data])
+    DataCl.setdefault('ring',[]).append([float(row[0].split()[18]) for row in data])
+    DataCl.setdefault('ring_e',[]).append([float(row[0].split()[19]) for row in data])
+    DataCl.setdefault('offset',[]).append([float(row[0].split()[20]) for row in data])
+    DataCl.setdefault('h2o',[]).append([float(row[0].split()[21]) for row in data])
+    DataCl.setdefault('h2o_e',[]).append([float(row[0].split()[22]) for row in data])
+    DataCl.setdefault('o3',[]).append([float(row[0].split()[23]) for row in data])
+    DataCl.setdefault('o3_e',[]).append([float(row[0].split()[24]) for row in data])
+
+    #-----------------------------------------------------------
+    #fractional day to julian day
+    #-----------------------------------------------------------
+    for k, doy in enumerate(DataCl['doy']):
+        doy_w =  np.asarray(doy)
+        ft_w = np.asarray(DataCl['tod'][k])            
+
+        if (group == 'BOU') or (group == 'MOH') or (group == 'IAP'):
+
+            DataCl.setdefault( 'DT',[] ).append( doytodate(doy_w-1, ft_w, iyear = 2013))
+        else:
+
+            DataCl.setdefault( 'DT',[] ).append( doytodate(doy_w, ft_w, iyear = 2013))
+
+    return DataCl
+
+
 #------------------------------------------------------------------------------------------------------------------------------    
 class _DateRange(object):
     '''
@@ -1054,12 +1133,13 @@ class readoutdata(_DateRange):
         if self.pdfsav: self.pdfsav.savefig(fig,dpi=200)
         else:           plt.show(block=False)            
 
-    
-    def plttsdoih(self, easplt, fltr=False, maxrms=0.001, minsza=0.0, maxsza=90.0, maxOff=5, vaplt=51,
-             rmsFlg=False, szaFlg=False, ofFlg=False, LDFlg=False, VAFlg=False, dois = 0.0, dtrange=False, title='', ver2plt='', group4mean=[]):
+    def pltExdoi(self, fltr=False, maxrms=0.001, minsza=0.0, maxsza=90.0, maxOff=5, vaplt=51,
+             rmsFlg=False, szaFlg=False, ofFlg=False, LDFlg=False, VAFlg=False, dois = 0.0, dtrange=False, title='', ver2plt=''):
 
         print '\nPrinting plots..........\n'
-        
+
+        goi = 'BOU'
+        easplt = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 15.0, 30.0]
          
         clr = clrplt()
 
@@ -1068,6 +1148,7 @@ class readoutdata(_DateRange):
 
         listgroup = list(set(self.group))
         listgroup.sort()
+
 
         if dtrange:
             DateFmt  = DateFormatter('%H')
@@ -1082,132 +1163,59 @@ class readoutdata(_DateRange):
         else: self.inds = np.array([])
 
         neas =  len(easplt)
-        Ndoi =  len(dois)
-                
-        fig, axs = plt.subplots(neas, Ndoi, figsize=(10,10), sharex=False)
-        fig2, axs2 = plt.subplots(neas, Ndoi, figsize=(10,10), sharex=False)
+        Ndoi = len(dois)
+        
+        fig, axs = plt.subplots(Ndoi, figsize=(10,10), sharex=False)
+        
+        #---------------------------------
+        # Remove data based on filter inds
+        #---------------------------------
+        if fltr: index = self.data[goi][ver2plt]['inds'][0]
+        else:    index = []
+        
+        ea_flt       = np.delete(self.data[goi][ver2plt]['ea'][0], index)
+        va_flt       = np.delete(self.data[goi][ver2plt]['va'][0], index)
+        doy_flt      = np.delete(self.data[goi][ver2plt]['doy'][0], index)
+        chocho_flt   = np.delete(self.data[goi][ver2plt]['chocho'][0], index)
+        chocho_e_flt = np.delete(self.data[goi][ver2plt]['chocho_e'][0], index)
+        datet_flt    = np.delete(self.data[goi][ver2plt]['DT'][0], index)
 
         for n, nea in enumerate(easplt):
-            
-            chocho_h     = []
-            chocho_std_h = []
-            cnt_h        = []
-            dt_h         = []
-            ea_h         = []
-            chocho_m_h   = []
-            namegroup    = []
+            #---------------------------------
+            inds  = np.where(np.array(ea_flt) == nea)[0]
+            chocho_w = np.asarray(chocho_flt[inds])
+            dt_w =  np.asarray(datet_flt[inds])
+            ea_w = np.asarray(ea_flt[inds])  
 
-            for group in listgroup:
-                #---------------------------------
-                # Remove data based on filter inds
-                #---------------------------------
+            namegroup = getgroupname(goi)
 
-                if fltr: index = self.data[group][ver2plt]['inds'][0]
-                else:    index = []
-            
-                ea_flt       = np.delete(self.data[group][ver2plt]['ea'][0], index)
-                va_flt       = np.delete(self.data[group][ver2plt]['va'][0], index)
-                doy_flt      = np.delete(self.data[group][ver2plt]['doy'][0], index)
-                chocho_flt   = np.delete(self.data[group][ver2plt]['chocho'][0], index)
-                chocho_e_flt = np.delete(self.data[group][ver2plt]['chocho_e'][0], index)
-                datet_flt    = np.delete(self.data[group][ver2plt]['DT'][0], index)
-
-                #---------------------------------
-                inds       =  np.where(np.array(ea_flt) == nea)[0]
-                chocho_w   =  np.asarray(chocho_flt[inds])
-                dt_w       =  np.asarray(datet_flt[inds])
-
-                idate = dt.date(2013, 06, 01)
-                fdate = dt.date(2013, 07, 10)  
-                
-                dataAvg, std, dt_avg, cnt = hourAvg(chocho_w,dt_w, idate, fdate, dateAxis=1, meanAxis=0)
-                chocho_h.append(dataAvg)
-                dt_h.append(dt_avg)
-                cnt_h.append(cnt)
-                chocho_std_h.append(std)
-                namegroup.append(getgroupname(group))
-                
-            chocho_h     = np.asarray(chocho_h)
-            dt_h         = np.asarray(dt_h) 
-            cnt_h        = np.asarray(cnt_h)
-            chocho_std_h = np.asarray(chocho_std_h)
-            ea_h         = np.asarray(ea_h)
-
-
-            intrsctVals = np.intersect1d(listgroup, group4mean, assume_unique=False)
-            indsmean    = np.nonzero( np.in1d( listgroup, intrsctVals, assume_unique=False ) )[0]
-
-            chocho_h_g = np.mean(chocho_h[indsmean], axis=0)
-            chocho_h_g = np.asarray(chocho_h_g)
-
-
-            for dd, doi in enumerate(dois):   
-
-                for i, group in enumerate(listgroup):
-                    namegroup  =  getgroupname(group)
-                    axs[n, dd].scatter(dt_h[i],chocho_h[i], edgecolor=clr[i], label=namegroup, color='white')
-                    axs2[n, dd].scatter(dt_h[i],np.true_divide(chocho_h[i]-chocho_h_g, chocho_h_g) *100.0, edgecolor=clr[i], label=namegroup, color='white')                
-
-                axs[n, dd].scatter(dt_h[0],chocho_h_g, edgecolor='k', color='k')
+            for dd, doi in enumerate(dois):
+               
+                axs[n, dd].scatter(dt_w, chocho_w, edgecolor=clr[i], label=namegroup, color='white')
                 axs[n, dd].grid(True, which='both')
-                axs[n, dd].set_ylim(-0.8, 6.0)
+                axs[n, dd].set_ylim(-0.8, 6)
                 axs[n, dd].set_title('EA = %s'% nea)
                 axs[n, dd].xaxis.set_major_formatter(DateFmt)
-                axs[n, dd].tick_params(axis='both',which='both',labelsize=12)
-
-
-                axs2[n, dd].grid(True, which='both')
-                axs2[n, dd].set_ylim(-100, 100)
-                axs2[n, dd].set_title('EA = %s'% nea)
-                axs2[n, dd].xaxis.set_major_formatter(DateFmt)
-                axs2[n, dd].tick_params(axis='both',which='both',labelsize=12)
-                    
-                if dtrange:
-                    axs[n, dd].set_xlim(dt.datetime(doi.year, doi.month, doi.day, 04, 0), dt.datetime(doi.year, doi.month, doi.day, 20, 0) )
-                    axs2[n, dd].set_xlim(dt.datetime(doi.year, doi.month, doi.day, 04, 0), dt.datetime(doi.year, doi.month, doi.day, 20, 0) )
-
-                if n != neas-1:
-                    axs[n, dd].set_xticklabels([])
-                    axs2[n, dd].set_xticklabels([])
-                if n == neas/2: 
-                    axs[n, 0].set_ylabel(r'CHOCHO dSCD [x10$^{15}$ molecules$\cdot$cm$^{-2}$]',multialignment='center', fontsize=14)
-                    axs2[n, 0].set_ylabel(r'Relative difference [$\%$, (group - mean)/mean]',multialignment='center', fontsize=14)
-                if n == neas-1: 
-                    axs[n, dd].set_xlabel('Hour [UT] ('+str(doi.day)+'/'+str(doi.month)+'/'+str(doi.year)+')', multialignment='center', fontsize=14)
-                    axs2[n, dd].set_xlabel('Hour [UT] ('+str(doi.day)+'/'+str(doi.month)+'/'+str(doi.year)+')', multialignment='center', fontsize=14)
-                #if n == 0: 
-                    #axs[n, dd].scatter(dt_h[i],chocho_h[i], edgecolor=clr[i], label=namegroup, color='white')
-                    #axs2[n, dd].scatter(dt_h[i],chocho_h[i], edgecolor=clr[i], label=namegroup, color='white')
-                    
-                handles, labels = axs[0,0].get_legend_handles_labels()
-                handles2, labels2 = axs2[0,0].get_legend_handles_labels()
+                axs[n, dd].tick_params(axis='both', which='both',labelsize=12)
                 
-
-            del(chocho_h)
-            del(chocho_std_h)
-            del(cnt_h)
-            del(dt_h)
-            del(ea_h)
-            del(chocho_m_h)
-            del(chocho_h_g)
+                if dtrange:
+                    axs[n, dd].set_xlim((dt.datetime(doi.year, doi.month, doi.day, 4, 0), dt.datetime(doi.year, doi.month, doi.day, 20, 0)) )
 
 
-        fig.legend(handles, labels, prop={'size':12},  bbox_to_anchor=(0.5, 0.965), loc='upper center', ncol=int(len(listgroup)))
-        fig2.legend(handles2, labels2, prop={'size':12},  bbox_to_anchor=(0.5, 0.965), loc='upper center', ncol=int(len(listgroup)))
-        
-        #plt.legend(handles, labels, prop={'size':11}, loc='upper center', bbox_to_anchor=(-0.12, 6.23), ncol=int(len(listgroup)))
-        #plt.legend(prop={'size':11}, loc='upper center', bbox_to_anchor=(-0.12, 6.23), ncol=int(len(listgroup)))
-
+                if n != neas-1: axs[n, dd].set_xticklabels([])
+                if n == neas/2: axs[n, dd].set_ylabel(r'CHOCHO dSCD [x10$^{15}$ molecules$\cdot$cm$^{-2}$]',multialignment='center', fontsize=14)
+                if n == neas-1: axs[n, dd].set_xlabel('Hour [UT] ('+str(doi.day)+'/'+str(doi.month)+'/'+str(doi.year)+')', multialignment='center', fontsize=14)
+                #if n == 0: axs[n, dd].scatter(dt_w,chocho_w, edgecolor=clr[i], label=namegroup, color='white')
+            
+        plt.legend(prop={'size':11}, loc='upper center', bbox_to_anchor=(-0.12, 6.23), ncol=int(len(listgroup)))
+    
         fig.suptitle(title, fontsize=16)
-        fig2.suptitle(title, fontsize=16)
+        #fig.autofmt_xdate()
 
-        fig.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.05)
-        fig2.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.05)
+        plt.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.05)
 
-        if self.pdfsav: 
-            self.pdfsav.savefig(fig,dpi=200)
-            self.pdfsav.savefig(fig2,dpi=200)
-        else: plt.show(block=False)            
+        if self.pdfsav: self.pdfsav.savefig(fig,dpi=200)
+        else:           plt.show(block=False)            
 
 
     def plttsdoihcorr(self, easplt, fltr=False, maxrms=0.001, minsza=0.0, maxsza=90.0, maxOff=5, vaplt=51,
@@ -1239,14 +1247,17 @@ class readoutdata(_DateRange):
         else: self.inds = np.array([])
 
         neas =  len(easplt)
+        Ndoi =  len(dois)
         
 
         doi_i = dt.datetime(dois[0].year, dois[0].month, dois[0].day, 0, 0)
         doi_f = dt.datetime(dois[-1].year, dois[-1].month, dois[-1].day, 23, 0)
 
         doi_doy = toYearFraction([doi_i, doi_f])
-                
-        fig, axs = plt.subplots(3, figsize=(10,10), sharex=True)
+        
+        fig, axs = plt.subplots(neas, Ndoi, figsize=(10,10), sharex=False)
+        fig2, axs2 = plt.subplots(neas, Ndoi, figsize=(10,10), sharex=False)
+        fig3, axs3 = plt.subplots(3, figsize=(10,10), sharex=True)
 
         for n, nea in enumerate(easplt):
             
@@ -1310,7 +1321,66 @@ class readoutdata(_DateRange):
             chocho_h_g = np.mean(chocho_h[indsmean], axis=0)
             chocho_h_g = np.asarray(chocho_h_g)
 
-            
+            #-------------------------------------
+            #
+            #------------------------------------
+            for dd, doi in enumerate(dois):   
+
+                for i, group in enumerate(listgroup):
+                    labelgroup  =  getgroupname(group)
+                    axs[n, dd].scatter(dt_h[i],chocho_h[i], edgecolor=clr[i], label=labelgroup, color='white')
+                    axs2[n, dd].scatter(dt_h[i],np.true_divide(chocho_h[i]-chocho_h_g, chocho_h_g) *100.0, edgecolor=clr[i], label=labelgroup, color='white')                
+
+                axs[n, dd].scatter(dt_h[0],chocho_h_g, edgecolor='k', color='k')
+                axs[n, dd].grid(True, which='both')
+                axs[n, dd].set_ylim(-0.8, 6.0)
+                axs[n, dd].set_title('EA = %s'% nea)
+                axs[n, dd].xaxis.set_major_formatter(DateFmt)
+                axs[n, dd].tick_params(axis='both',which='both',labelsize=12)
+
+
+                axs2[n, dd].grid(True, which='both')
+                axs2[n, dd].set_ylim(-100, 100)
+                axs2[n, dd].set_title('EA = %s'% nea)
+                axs2[n, dd].xaxis.set_major_formatter(DateFmt)
+                axs2[n, dd].tick_params(axis='both',which='both',labelsize=12)
+                    
+                if dtrange:
+                    axs[n, dd].set_xlim(dt.datetime(doi.year, doi.month, doi.day, 04, 0), dt.datetime(doi.year, doi.month, doi.day, 20, 0) )
+                    axs2[n, dd].set_xlim(dt.datetime(doi.year, doi.month, doi.day, 04, 0), dt.datetime(doi.year, doi.month, doi.day, 20, 0) )
+
+                if n != neas-1:
+                    axs[n, dd].set_xticklabels([])
+                    axs2[n, dd].set_xticklabels([])
+                if n == neas/2: 
+                    axs[n, 0].set_ylabel(r'CHOCHO dSCD [x10$^{15}$ molecules$\cdot$cm$^{-2}$]',multialignment='center', fontsize=14)
+                    axs2[n, 0].set_ylabel(r'Relative difference [$\%$, (group - mean)/mean]',multialignment='center', fontsize=14)
+                if n == neas-1: 
+                    axs[n, dd].set_xlabel('Hour [UT] ('+str(doi.day)+'/'+str(doi.month)+'/'+str(doi.year)+')', multialignment='center', fontsize=14)
+                    axs2[n, dd].set_xlabel('Hour [UT] ('+str(doi.day)+'/'+str(doi.month)+'/'+str(doi.year)+')', multialignment='center', fontsize=14)
+                #if n == 0: 
+                    #axs[n, dd].scatter(dt_h[i],chocho_h[i], edgecolor=clr[i], label=labelgroup, color='white')
+                    #axs2[n, dd].scatter(dt_h[i],chocho_h[i], edgecolor=clr[i], label=labelgroup, color='white')
+                    
+                handles, labels = axs[0,0].get_legend_handles_labels()
+                handles2, labels2 = axs2[0,0].get_legend_handles_labels()
+
+            fig.legend(handles, labels, prop={'size':12},  bbox_to_anchor=(0.5, 0.965), loc='upper center', ncol=int(len(listgroup)))
+            fig2.legend(handles2, labels2, prop={'size':12},  bbox_to_anchor=(0.5, 0.965), loc='upper center', ncol=int(len(listgroup)))
+        
+            #plt.legend(handles, labels, prop={'size':11}, loc='upper center', bbox_to_anchor=(-0.12, 6.23), ncol=int(len(listgroup)))
+            #plt.legend(prop={'size':11}, loc='upper center', bbox_to_anchor=(-0.12, 6.23), ncol=int(len(listgroup)))
+
+            fig.suptitle(title, fontsize=16)
+            fig2.suptitle(title, fontsize=16)
+
+            fig.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.05)
+            fig2.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.05)
+                
+
+            #-------------------------------------
+            #
+            #--------------------------------------
             for i, gly in enumerate(chocho_h):
 
                 mask1 = ~np.isnan(chocho_h_g)
@@ -1334,32 +1404,34 @@ class readoutdata(_DateRange):
                     xx_g.append(i)
 
 
-            axs[0].scatter(xx_g,slope_g, label=str(nea), color=clr[n])           
-            axs[0].grid(True, which='both')
-            axs[0].set_xlim(0, 4)
-            axs[0].set_xlim(-0.5, len(xx_g)-0.5)
+            axs3[0].scatter(xx_g,slope_g, label=str(nea), color=clr[n])           
+            axs3[0].grid(True, which='both')
+            axs3[0].set_xlim(0, 4)
+            axs3[0].set_xlim(-0.5, len(xx_g)-0.5)
             #axs[0].set_title('Slope')
-            axs[0].set_ylabel('Slope')
-            axs[0].tick_params(axis='both',which='both',labelsize=12)
+            axs3[0].set_ylabel('Slope')
+            axs3[0].tick_params(axis='both',which='both',labelsize=12)
 
             
-            axs[1].scatter(xx_g,intercept_g, color=clr[n])           
-            axs[1].grid(True, which='both')
+            axs3[1].scatter(xx_g,intercept_g, color=clr[n])           
+            axs3[1].grid(True, which='both')
             #axs[1].set_title('Intercept')
-            axs[1].set_ylabel('Intercept [x10$^{15}$]')
-            axs[1].tick_params(axis='both',which='both',labelsize=12)
+            axs3[1].set_ylabel('Intercept [x10$^{15}$ molecules$\cdot$cm$^{-2}$]')
+            axs3[1].tick_params(axis='both',which='both',labelsize=12)
 
-            axs[2].scatter(xx_g,r_g, color=clr[n])           
-            axs[2].grid(True, which='both')
+            axs3[2].scatter(xx_g,r_g, color=clr[n])           
+            axs3[2].grid(True, which='both')
             #axs[2].set_title('Coefficient of Correlation (r)')
-            axs[2].set_ylabel('Coefficient of Correlation (r)')
+            axs3[2].set_ylabel('Coefficient of Correlation (r)')
             #axs[2].set_xlabel('Group')
-            axs[2].tick_params(axis='both',which='both',labelsize=12)
+            axs3[2].tick_params(axis='both',which='both',labelsize=12)
 
-        handles, labels = axs[0].get_legend_handles_labels()
+        handles, labels = axs3[0].get_legend_handles_labels()
 
-        plt.legend(handles, labels, prop={'size':12}, loc='upper center', bbox_to_anchor=(0.5, 3.6), ncol=int(neas))
-        fig.suptitle(title, fontsize=16)      
+        #plt.legend(handles, labels, prop={'size':12}, loc='upper center', bbox_to_anchor=(0.5, 3.6), ncol=int(neas))
+        fig3.legend(handles, labels, prop={'size':12},  bbox_to_anchor=(0.5, 0.96), loc='upper center', ncol=int(neas))
+        fig3.suptitle(title, fontsize=16) 
+        fig3.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.1)     
 
         my_xticks = namegroup
         plt.xticks(xx_g, my_xticks, rotation=45)
@@ -1368,8 +1440,9 @@ class readoutdata(_DateRange):
         if self.pdfsav: 
             self.pdfsav.savefig(fig,dpi=200)
             self.pdfsav.savefig(fig2,dpi=200)
+            self.pdfsav.savefig(fig3,dpi=200)
         else: plt.show(block=False)  
-        
+
 
     def pltraw(self, eaplt, vaplt=51, ver2plt=''):
 
