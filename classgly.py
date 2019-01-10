@@ -16,14 +16,14 @@ import numpy as np
 import os
 import csv
 import itertools
-from collections import OrderedDict
+#from collections import OrderedDict
 import os
 from os import listdir
 from os.path import isfile, join
 import re
 from scipy.integrate import simps
 import matplotlib
-from collections import namedtuple
+#from collections import namedtuple
 # Force matplotlib to not use any Xwindows backend.
 #matplotlib.use('Agg')
 import matplotlib.dates as md
@@ -40,7 +40,7 @@ import matplotlib.gridspec as gridspec
 
 from datetime import timedelta
 
-from sklearn import linear_model, datasets
+#from sklearn import linear_model, datasets
 from scipy import stats
 
                                             #------------------#
@@ -1191,7 +1191,7 @@ class readoutdata(_DateRange):
 
             for dd, doi in enumerate(dois):
                
-                axs[n, dd].scatter(dt_w, chocho_w, edgecolor=clr[i], label=namegroup, color='white')
+                axs[n, dd].scatter(dt_w, chocho_w, edgecolor='r', label=namegroup, color='white')
                 axs[n, dd].grid(True, which='both')
                 axs[n, dd].set_ylim(-0.8, 6)
                 axs[n, dd].set_title('EA = %s'% nea)
